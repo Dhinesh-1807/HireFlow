@@ -3,7 +3,8 @@
 A modern recruitment and hiring management platform built for hackathons.
 
 ## 👥 Team
-- **Owner:** [Dhinesh-1807](https://github.com/Dhinesh-1807)
+- **TEAM LEAD: ** [Dhinesh-1807](https://github.com/Dhinesh-1807)
+- **TEAM MEMBER: ** [Ajay07S](https://github.com/Ajay07S)
 
 ## 📌 Project Overview
 *(Add your project description, features, and demo links here)*
