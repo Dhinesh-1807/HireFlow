@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   UploadCloud,
@@ -74,18 +74,20 @@ export default function Resumes() {
     setUploading(true);
     setProgress(10);
 
-    const formData = new FormData();
-    files.forEach((file) => formData.append("resumes", file));
-
     try {
-      const interval = setInterval(() => {
-        setProgress((prev) => (prev < 90 ? prev + 20 : prev));
-      }, 300);
-
-      const res = await api.uploadResumes(formData, (p) => setProgress(p));
-      clearInterval(interval);
+      let uploadedCount = 0;
+      for (const file of files) {
+        await api.uploadResumeFile(file, (p) => {
+          const overall = Math.round(((uploadedCount + p / 100) / files.length) * 100);
+          setProgress(overall);
+        });
+        uploadedCount++;
+      }
       setProgress(100);
-      setSuccessResult(res);
+      setSuccessResult({
+        success: true,
+        filesUploaded: files.length,
+      });
     } catch (err) {
       setErrorMessage("Failed to upload resumes. Please try again.");
     } finally {

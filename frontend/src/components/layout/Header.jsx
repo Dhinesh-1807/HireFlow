@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -9,10 +9,24 @@ import {
   Sparkles,
   Server,
 } from "lucide-react";
+import api from "../../services/api";
 
 export default function Header({ onMenuClick, title = "Dashboard", subtitle }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isBackendLive, setIsBackendLive] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.checkHealth().then((health) => {
+      if (isMounted) {
+        setIsBackendLive(!!health);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -60,11 +74,19 @@ export default function Header({ onMenuClick, title = "Dashboard", subtitle }) {
       {/* Right side: Actions & Status */}
       <div className="flex items-center gap-2.5">
         {/* Backend / AI Status Badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <Server className="w-3 h-3" />
-          <span>API Ready</span>
-        </div>
+        {isBackendLive ? (
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <Server className="w-3 h-3" />
+            <span>FastAPI: Connected</span>
+          </div>
+        ) : (
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+            <Server className="w-3 h-3" />
+            <span>Demo Mock Mode</span>
+          </div>
+        )}
 
         {/* Upload Resumes Quick Button */}
         <button
