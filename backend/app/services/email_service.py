@@ -314,12 +314,12 @@ class EmailService:
                 err_str = str(e)
                 logger.error(f"SMTP failed to deliver to {recipient_email}: {err_str}")
                 
-                # Check for cloud firewall blocking (Render free tier timeout)
-                if "timed out" in err_str.lower() or "110" in err_str or "timeout" in err_str.lower():
+                # Check for cloud firewall blocking (Render free tier blocks ports 25, 465, 587)
+                if any(k in err_str.lower() for k in ["timed out", "110", "101", "timeout", "unreachable", "refused"]):
                     diagnostic = (
-                        f"SMTP Connection Timed Out to {settings.SMTP_HOST}:{settings.SMTP_PORT}. "
-                        f"IMPORTANT: Render Free Tier blocks outbound SMTP ports 587 and 465 to prevent spam. "
-                        f"To deliver emails from Render, add a free BREVO_API_KEY in Render's Environment tab, "
+                        f"Cloud SMTP Blocked ({settings.SMTP_HOST}:{settings.SMTP_PORT} - {err_str}). "
+                        f"Render Free Tier blocks outbound SMTP ports 587/465 to prevent spam. "
+                        f"To send live emails from Render, add a free BREVO_API_KEY in Render's Environment tab (sends via HTTPS port 443), "
                         f"or run the backend locally on your computer where port 587 is unblocked."
                     )
                 else:
