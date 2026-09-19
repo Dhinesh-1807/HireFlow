@@ -3,12 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   MessageSquareText,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  HelpCircle,
   FileText,
-  ExternalLink,
   ShieldCheck,
 } from "lucide-react";
 import EvidenceBadge from "../components/common/EvidenceBadge";
@@ -43,7 +38,7 @@ export default function CandidateDetail() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <button
           onClick={() => navigate("/candidates")}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-700 hover:text-sky-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Candidate Database</span>
@@ -52,7 +47,7 @@ export default function CandidateDetail() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/interviews?candidate=${candidate.id}`)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-500/20 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
           >
             <MessageSquareText className="w-4 h-4" />
             <span>Generate Interview Questions</span>
@@ -61,7 +56,7 @@ export default function CandidateDetail() {
       </div>
 
       {/* Candidate Profile Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-3">
@@ -95,9 +90,9 @@ export default function CandidateDetail() {
             </div>
           </div>
 
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/70">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1">
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+          <div className="bg-sky-50/50 rounded-xl p-4 border border-sky-100">
+            <div className="flex items-center gap-2 text-xs font-semibold text-sky-800 mb-1">
+              <ShieldCheck className="w-4 h-4 text-sky-600" />
               <span>AI Screening Assessment (Auditable)</span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -108,7 +103,7 @@ export default function CandidateDetail() {
       </div>
 
       {/* Requirement Mapping Table / Deep Dive */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <h3 className="text-base font-bold text-slate-900">
@@ -118,7 +113,7 @@ export default function CandidateDetail() {
               Exact quotes and source references parsed from the candidate's PDF resume.
             </p>
           </div>
-          <span className="text-xs font-medium text-slate-400">
+          <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-200">
             {candidate.requirements?.length || 0} Requirements Mapped
           </span>
         </div>
@@ -128,26 +123,26 @@ export default function CandidateDetail() {
             <div
               key={req.id}
               className={`p-4 rounded-xl border transition-all ${
-                req.status === "EVIDENCE_FOUND"
+                req.status === "EVIDENCE_FOUND" || req.status === "fully_met"
                   ? "bg-emerald-50/40 border-emerald-200"
-                  : req.status === "NEEDS_VALIDATION"
+                  : req.status === "NEEDS_VALIDATION" || req.status === "partially_met"
                   ? "bg-amber-50/40 border-amber-200"
                   : "bg-rose-50/40 border-rose-200"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
                 <div className="font-semibold text-xs text-slate-900 flex items-center gap-2">
-                  <span>Requirement:</span>
-                  <span className="text-slate-700">{req.title}</span>
+                  <span className="text-slate-500">Requirement:</span>
+                  <span className="text-slate-800">{req.title}</span>
                 </div>
                 <EvidenceBadge type={req.status} />
               </div>
 
-              <div className="mt-2 text-xs text-slate-700 bg-white/80 p-3 rounded-lg border border-slate-200/60 space-y-1.5">
-                <div className="font-medium text-slate-900">Extracted Proof / Analysis:</div>
+              <div className="mt-2 text-xs text-slate-700 bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs space-y-1.5">
+                <div className="font-semibold text-slate-900">Extracted Proof / Analysis:</div>
                 <p className="italic text-slate-600">"{req.evidence}"</p>
                 <div className="text-[11px] text-slate-400 flex items-center gap-1.5 pt-1">
-                  <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                  <FileText className="w-3.5 h-3.5 text-sky-500" />
                   <span>Source: {req.source}</span>
                 </div>
               </div>

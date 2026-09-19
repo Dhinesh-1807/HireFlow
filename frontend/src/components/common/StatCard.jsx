@@ -1,11 +1,16 @@
 ﻿import React from "react";
 
-export default function StatCard({ title, value, change, icon: Icon, color = "indigo", subtitle }) {
+export default function StatCard({ title, value, change, icon: Icon, color = "sky", subtitle }) {
   const colorMap = {
-    indigo: {
-      bg: "bg-indigo-50",
-      text: "text-indigo-600",
-      border: "border-indigo-100",
+    sky: {
+      bg: "bg-sky-50",
+      text: "text-sky-600",
+      border: "border-sky-100",
+    },
+    cyan: {
+      bg: "bg-sky-100/70",
+      text: "text-sky-500",
+      border: "border-sky-200",
     },
     emerald: {
       bg: "bg-emerald-50",
@@ -18,30 +23,35 @@ export default function StatCard({ title, value, change, icon: Icon, color = "in
       border: "border-amber-100",
     },
     purple: {
-      bg: "bg-purple-50",
-      text: "text-purple-600",
-      border: "border-purple-100",
+      bg: "bg-sky-50",
+      text: "text-sky-600",
+      border: "border-sky-100",
+    },
+    indigo: {
+      bg: "bg-sky-50",
+      text: "text-sky-600",
+      border: "border-sky-100",
     },
   };
 
-  const currentTheme = colorMap[color] || colorMap.indigo;
+  const currentTheme = colorMap[color] || colorMap.sky;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-card hover:shadow-card-hover hover:border-sky-300 transition-all duration-200 group hover:-translate-y-0.5">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           {title}
         </span>
         {Icon && (
-          <div className={`p-2.5 rounded-lg ${currentTheme.bg} ${currentTheme.text}`}>
+          <div className={`p-2.5 rounded-lg ${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border} transition-colors group-hover:bg-sky-100/80`}>
             <Icon className="w-5 h-5" />
           </div>
         )}
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
+      <div className="mt-2.5 flex items-baseline gap-2">
         <span className="text-3xl font-bold tracking-tight text-slate-900">{value}</span>
         {change && (
-          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
             {change}
           </span>
         )}

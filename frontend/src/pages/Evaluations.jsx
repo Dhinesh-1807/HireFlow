@@ -1,14 +1,11 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  FileCheck,
   Download,
   CheckCircle2,
   AlertTriangle,
   HelpCircle,
   ShieldCheck,
-  Printer,
-  Sparkles,
 } from "lucide-react";
 import api from "../services/api";
 
@@ -47,7 +44,7 @@ export default function Evaluations() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Structured Evaluation Report</h2>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Structured Evaluation Report</h2>
           <p className="text-xs text-slate-500 mt-1">
             Candidate: <span className="font-semibold text-slate-800">{candidate.name}</span> • Role: {candidate.role}
           </p>
@@ -56,19 +53,21 @@ export default function Evaluations() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-sky-700 bg-white hover:bg-sky-50 border border-sky-200 rounded-lg shadow-xs transition-all duration-150"
           >
-            <Download className="w-4 h-4 text-slate-500" />
+            <Download className="w-4 h-4 text-sky-600" />
             <span>Export / Print Report</span>
           </button>
         </div>
       </div>
 
       {/* Human Recruiter Decision Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-indigo-600" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">
                 Human Recruiter Final Determination
@@ -82,7 +81,7 @@ export default function Evaluations() {
             <select
               value={recruiterDecision}
               onChange={(e) => setRecruiterDecision(e.target.value)}
-              className="text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg px-3 py-2 outline-none"
+              className="text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/20"
             >
               <option value="Advance to Final Round">Advance to Final Round</option>
               <option value="Hold for Follow-up">Hold for Follow-up</option>
@@ -97,7 +96,7 @@ export default function Evaluations() {
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Interview Synthesis Summary
           </h4>
-          <p className="mt-2 text-xs text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <p className="mt-2 text-xs text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
             {evaluation.summary}
           </p>
         </div>

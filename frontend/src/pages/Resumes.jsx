@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   UploadCloud,
@@ -98,7 +98,7 @@ export default function Resumes() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Batch Resume Ingestion</h2>
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Batch Resume Ingestion</h2>
         <p className="text-xs text-slate-500 mt-1">
           Upload candidate PDF resumes. HireFlow extracts text, maps against target job requirements, and identifies evidence.
         </p>
@@ -110,22 +110,22 @@ export default function Resumes() {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 ${
           dragActive
-            ? "border-indigo-500 bg-indigo-50/50"
-            : "border-slate-300 bg-white hover:border-slate-400"
+            ? "border-sky-500 bg-sky-50/70"
+            : "border-slate-300 bg-white hover:border-sky-300 hover:bg-sky-50/20"
         }`}
       >
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+        <div className="w-14 h-14 mx-auto rounded-xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center mb-3 shadow-xs">
           <UploadCloud className="w-7 h-7" />
         </div>
-        <h3 className="text-sm font-bold text-slate-800">
+        <h3 className="text-sm font-bold text-slate-900">
           Drag & Drop Candidate Resumes Here
         </h3>
         <p className="text-xs text-slate-500 mt-1">Supports multiple PDF files up to 15MB each</p>
 
         <div className="mt-4">
-          <label className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg cursor-pointer shadow-sm transition-all">
+          <label className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg cursor-pointer shadow-sm shadow-sky-500/20 transition-all duration-150">
             <span>Browse Files</span>
             <input
               type="file"
@@ -148,7 +148,7 @@ export default function Resumes() {
 
       {/* Selected Files List */}
       {files.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-card space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Selected Resumes ({files.length})
@@ -156,7 +156,7 @@ export default function Resumes() {
             {!uploading && (
               <button
                 onClick={() => setFiles([])}
-                className="text-xs text-slate-400 hover:text-rose-600"
+                className="text-xs text-slate-400 hover:text-rose-600 transition-colors"
               >
                 Clear all
               </button>
@@ -167,8 +167,8 @@ export default function Resumes() {
             {files.map((file, idx) => (
               <div key={idx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span className="font-medium text-slate-800 truncate">{file.name}</span>
+                  <FileText className="w-4 h-4 text-sky-500 shrink-0" />
+                  <span className="font-semibold text-slate-800 truncate">{file.name}</span>
                   <span className="text-[11px] text-slate-400">
                     ({(file.size / 1024).toFixed(0)} KB)
                   </span>
@@ -176,7 +176,7 @@ export default function Resumes() {
                 {!uploading && (
                   <button
                     onClick={() => removeFile(idx)}
-                    className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                    className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -190,11 +190,11 @@ export default function Resumes() {
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-xs text-slate-600 font-medium">
                 <span>Ingesting and parsing resume text...</span>
-                <span>{progress}%</span>
+                <span className="font-semibold text-sky-700">{progress}%</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-600 transition-all duration-300 rounded-full"
+                  className="h-full bg-sky-500 transition-all duration-300 rounded-full"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -207,7 +207,7 @@ export default function Resumes() {
               <button
                 onClick={handleUpload}
                 disabled={uploading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150 disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>{uploading ? "Analyzing Resumes..." : "Process Resumes with AI"}</span>
@@ -219,7 +219,7 @@ export default function Resumes() {
 
       {/* Success Result Card */}
       {successResult && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-xs">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700 shrink-0">
               <CheckCircle2 className="w-5 h-5" />
@@ -234,7 +234,7 @@ export default function Resumes() {
               <div className="mt-4 flex items-center gap-3">
                 <button
                   onClick={() => navigate("/candidates")}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm transition-all"
                 >
                   <span>View Candidate Mappings</span>
                   <ArrowRight className="w-3.5 h-3.5" />
