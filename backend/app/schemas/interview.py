@@ -75,3 +75,33 @@ class InterviewSessionResponse(BaseModel):
     notes: List[InterviewNoteResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SendEvaluationReportRequest(BaseModel):
+    email: Optional[str] = Field(None, description="Candidate recipient email address")
+    custom_message: Optional[str] = Field(None, description="Optional custom recruiter message")
+    subject: Optional[str] = Field(None, description="Optional email subject line")
+    recruiter_decision: Optional[str] = Field(None, description="Recruiter decision to include in PDF")
+    recruiter_notes: Optional[str] = Field(None, description="Recruiter notes to include in PDF")
+    matrix_rows: Optional[List[dict]] = Field(None, description="Evidence matrix items for PDF report")
+
+
+class SendEvaluationReportResponse(BaseModel):
+    success: bool
+    mode: str
+    recipient: str
+    sent_at: Optional[str] = None
+    message: str
+    report_sent: bool = True
+    report_sent_at: Optional[datetime] = None
+    report_recipient: Optional[str] = None
+
+
+class EvaluationSendStatusResponse(BaseModel):
+    evaluation_id: int
+    report_sent: bool
+    report_sent_at: Optional[datetime] = None
+    report_recipient: Optional[str] = None
+    report_send_status: str = "NOT_SENT"
+    candidate_name: Optional[str] = None
+    candidate_email: Optional[str] = None

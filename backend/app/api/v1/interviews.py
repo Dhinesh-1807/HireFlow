@@ -192,3 +192,25 @@ def evaluate_interview(session_id: int, db: Session = Depends(get_db)):
         executive_summary=evaluation.executive_summary,
         created_at=evaluation.created_at,
     )
+
+
+@router.post("/evaluations/{evaluation_id}/send-report", summary="Send evaluation report to candidate (interviews alias)")
+def send_evaluation_report_interview_alias(
+    evaluation_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+):
+    from app.api.v1.evaluations import send_evaluation_report
+    from app.schemas.interview import SendEvaluationReportRequest
+    req = SendEvaluationReportRequest(**payload)
+    return send_evaluation_report(evaluation_id=evaluation_id, payload=req, db=db)
+
+
+@router.get("/evaluations/{evaluation_id}/send-status", summary="Get evaluation send status (interviews alias)")
+def get_evaluation_send_status_interview_alias(
+    evaluation_id: str,
+    db: Session = Depends(get_db),
+):
+    from app.api.v1.evaluations import get_evaluation_send_status
+    return get_evaluation_send_status(evaluation_id=evaluation_id, db=db)
+

@@ -20,6 +20,17 @@ class Settings(BaseSettings):
     # Storage
     UPLOAD_DIR: str = "./uploads"
 
+    # Email Service Configuration
+    EMAIL_PROVIDER: str = "smtp"  # "smtp", "api", or "mock"
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+    EMAIL_FROM: str = "noreply@hireflow.ai"
+    EMAIL_FROM_NAME: str = "HireFlow Recruitment Team"
+    EMAIL_API_KEY: str = ""
+
     # CORS
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",

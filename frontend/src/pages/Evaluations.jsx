@@ -18,6 +18,11 @@ import {
   Code2,
   Users2,
   Lightbulb,
+  Mail,
+  Send,
+  X,
+  ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import api from "../services/api";
 
@@ -33,15 +38,41 @@ export default function Evaluations() {
   );
   const [savedNotes, setSavedNotes] = useState(false);
 
+  // Email Delivery Workflow State (Module 14)
+  const [sendStatus, setSendStatus] = useState({
+    report_sent: false,
+    report_sent_at: null,
+    report_recipient: null,
+    report_send_status: "NOT_SENT",
+  });
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [customEmail, setCustomEmail] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
+  const [sendSuccessBanner, setSendSuccessBanner] = useState(null);
+  const [sendError, setSendError] = useState(null);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+
   useEffect(() => {
     Promise.all([
       api.getCandidate(candidateId),
       api.generateEvaluation(candidateId),
-    ]).then(([candData, evalData]) => {
+      api.getEvaluationSendStatus(candidateId),
+    ]).then(([candData, evalData, statusData]) => {
       setCandidate(candData);
       setEvaluation(evalData.evaluationReport);
+      if (statusData) {
+        setSendStatus(statusData);
+        if (candData?.email) {
+          setCustomEmail(candData.email);
+        } else if (statusData.candidate_email) {
+          setCustomEmail(statusData.candidate_email);
+        }
+      }
     });
   }, [candidateId]);
+
 
   if (!evaluation || !candidate) {
     return (
@@ -159,6 +190,78 @@ export default function Evaluations() {
     day: "numeric",
   });
 
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "";
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return String(isoString);
+    }
+  };
+
+  const handleOpenSendModal = () => {
+    setSendError(null);
+    const emailToUse = customEmail || candidate?.email || "";
+    setCustomEmail(emailToUse);
+    setIsEditingEmail(!emailToUse);
+    setEmailSubject(`Evaluation Report - ${candidate.name} | ${candidate.role}`);
+    setCustomMessage(
+      `Dear ${candidate.name},\n\nThank you for interviewing with us for the ${candidate.role} position at HireFlow. Attached is your comprehensive evaluation report detailing your interview assessment, requirement evidence synthesis, and technical observations.\n\nPlease let us know if you have any questions.\n\nWarm regards,\nHireFlow Recruitment Team`
+    );
+    setShowSendModal(true);
+  };
+
+  const handleSendEmail = async () => {
+    const targetEmail = (customEmail || "").trim();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      setSendError("Candidate email address was not found or is invalid. Please enter a valid email.");
+      return;
+    }
+
+    setSendingReport(true);
+    setSendError(null);
+
+    try {
+      const res = await api.sendEvaluationReport(candidateId, {
+        email: targetEmail,
+        customMessage,
+        subject: emailSubject,
+        recruiterDecision,
+        recruiterNotes,
+        matrixRows: matrixRows.map((r) => ({
+          requirement: r.requirement,
+          resumeEvidence: r.resumeEvidence,
+          interviewValidation: r.interviewValidation,
+          statusLabel: r.statusLabel,
+        })),
+      });
+
+      const updatedStatus = {
+        report_sent: true,
+        report_sent_at: res.report_sent_at || res.sent_at,
+        report_recipient: res.recipient || targetEmail,
+        report_send_status: "SENT",
+      };
+      setSendStatus(updatedStatus);
+      setShowSendModal(false);
+      setSendSuccessBanner(
+        `Evaluation report successfully sent to ${res.recipient || targetEmail}!`
+      );
+      setTimeout(() => setSendSuccessBanner(null), 8000);
+    } catch (err) {
+      setSendError(err.message || "Failed to dispatch email. Please verify candidate email address.");
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-[1280px] mx-auto py-6 sm:py-8 px-4 sm:px-8 lg:px-10 space-y-8 print:p-0 print:max-w-none print:w-full print:space-y-6 text-slate-900 bg-slate-50 min-h-screen">
       {/* Embedded Print CSS for Enterprise PDF Generation */}
@@ -185,14 +288,43 @@ export default function Evaluations() {
         }
       `}</style>
 
+      {/* Success Notification Banner */}
+      {sendSuccessBanner && (
+        <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm shadow-xs animate-in fade-in slide-in-from-top-2 duration-200 print:hidden">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{sendSuccessBanner}</span>
+          </div>
+          <button
+            onClick={() => setSendSuccessBanner(null)}
+            className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold px-2 py-1 rounded hover:bg-emerald-100 transition-colors cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* =========================================================================
           1. TOP REPORT HEADER (Document-Style)
          ========================================================================= */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200/90 print:border-slate-300">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-sky-100/70 text-sky-800 border border-sky-200 mb-2">
-            <Sparkles className="w-3 h-3 text-sky-600" />
-            <span>Candidate Evaluation Report</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-sky-100/70 text-sky-800 border border-sky-200">
+              <Sparkles className="w-3 h-3 text-sky-600" />
+              <span>Candidate Evaluation Report</span>
+            </div>
+            {sendStatus?.report_sent ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" title={`Sent to ${sendStatus.report_recipient}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Sent to Candidate ({formatDateTime(sendStatus.report_sent_at)})</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                <span>Not Sent to Candidate</span>
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Structured Evaluation Report
@@ -204,6 +336,17 @@ export default function Evaluations() {
         </div>
 
         <div className="flex items-center gap-3 print:hidden">
+          {/* Send Report to Candidate Button */}
+          <button
+            onClick={handleOpenSendModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-xs hover:shadow-sm transition-all duration-150 cursor-pointer"
+            title="Send evaluation report PDF to candidate's email"
+          >
+            <Mail className="w-4 h-4" />
+            <span>{sendStatus?.report_sent ? "Re-send Report" : "Send Report"}</span>
+          </button>
+
+          {/* Export / Print Button */}
           <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-sky-700 bg-white hover:bg-sky-50 border border-sky-200 rounded-lg shadow-xs hover:border-sky-300 transition-all duration-150 cursor-pointer"
@@ -214,6 +357,7 @@ export default function Evaluations() {
           </button>
         </div>
       </div>
+
 
       {/* =========================================================================
           2. CANDIDATE INFORMATION CARD (Clean 5-Column Horizontal ATS Bar)
@@ -251,16 +395,28 @@ export default function Evaluations() {
 
           <div className="space-y-1 pt-3 sm:pt-0 sm:pl-5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-slate-400" />
-              <span>Evaluation Status</span>
+              <Mail className="w-3.5 h-3.5 text-slate-400" />
+              <span>Report Delivery</span>
             </span>
-            <div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>{candidate.status || "Completed"}</span>
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500">Auditable Evidence</p>
+            {sendStatus?.report_sent ? (
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Sent to Candidate</span>
+                </span>
+                <p className="text-[10px] text-slate-500 mt-1 truncate" title={sendStatus.report_recipient}>
+                  {formatDateTime(sendStatus.report_sent_at)}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span>Not Sent</span>
+                </span>
+                <p className="text-[10px] text-slate-400 mt-1">Ready for Recruiter Send</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1 pt-3 sm:pt-0 sm:pl-5 col-span-2 sm:col-span-1">
@@ -638,6 +794,226 @@ export default function Evaluations() {
           <span className="text-slate-500 font-medium">Strictly Confidential</span>
         </div>
       </footer>
+
+      {/* =========================================================================
+          11. SEND EVALUATION REPORT MODAL (Enterprise Recruiter Confirmation)
+         ========================================================================= */}
+      {showSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto print:hidden">
+          <div className="relative w-full max-w-xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4.5 bg-slate-50 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700">
+                  <Mail className="w-5 h-5 text-sky-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Send Evaluation Report to Candidate
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Deliver the official PDF scorecard and interview synthesis directly to candidate.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSendModal(false)}
+                disabled={sendingReport}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 max-h-[calc(85vh-140px)] overflow-y-auto">
+              {/* Duplicate Send Warning */}
+              {sendStatus?.report_sent && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-xs text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Report Already Dispatched:</span> This report was already sent to{" "}
+                    <span className="font-semibold">{sendStatus.report_recipient}</span> on{" "}
+                    {formatDateTime(sendStatus.report_sent_at)}. Sending again will dispatch a new copy with your latest notes.
+                  </div>
+                </div>
+              )}
+
+              {/* Error Alert */}
+              {sendError && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-xs text-rose-800">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span className="font-semibold">{sendError}</span>
+                </div>
+              )}
+
+              {/* Candidate Info Summary */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    Candidate Name
+                  </span>
+                  <span className="font-bold text-slate-900">{candidate.name}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    Target Position
+                  </span>
+                  <span className="font-semibold text-slate-800">{candidate.role}</span>
+                </div>
+              </div>
+
+              {/* Recipient Email */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Candidate Email Address
+                </label>
+
+                {isEditingEmail || !candidate.email ? (
+                  <div className="space-y-2">
+                    {!candidate.email && (
+                      <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Candidate email address was not found in the uploaded resume. Please enter an email manually:</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={customEmail}
+                        onChange={(e) => setCustomEmail(e.target.value)}
+                        placeholder="e.g. devavarninemurugesh@gmail.com"
+                        className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-900"
+                      />
+                      {candidate.email && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomEmail(candidate.email);
+                            setIsEditingEmail(false);
+                          }}
+                          className="px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-sky-600" />
+                      <span className="text-sm font-semibold text-slate-800">{customEmail}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        Extracted from Resume
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingEmail(true)}
+                      className="text-xs font-semibold text-sky-600 hover:text-sky-800 cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Attachment Preview Card */}
+              <div className="p-3.5 bg-sky-50/60 border border-sky-200 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white border border-sky-300 flex items-center justify-center text-sky-600 shadow-2xs">
+                    <FileText className="w-5 h-5 text-sky-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900 font-mono">
+                      HireFlow_Evaluation_Report_{candidate.name.replace(/\s+/g, "_")}.pdf
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      ReportLab Generated ATS Scorecard (~5 KB) • 3-Pillar Evidence & Audit
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={`http://localhost:8000/api/v1/evaluations/${candidate.id || candidateId}/preview-pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-900 px-2.5 py-1.5 bg-white rounded-lg border border-sky-200 hover:bg-sky-50 transition-colors shadow-2xs"
+                  title="Preview PDF document in new browser tab"
+                >
+                  <span>Preview</span>
+                  <ExternalLink className="w-3 h-3 text-sky-500" />
+                </a>
+              </div>
+
+              {/* Email Subject Line */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Email Subject Line
+                </label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 font-medium"
+                />
+              </div>
+
+              {/* Recruiter Custom Message */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Recruiter Message to Candidate (Optional)
+                </label>
+                <textarea
+                  rows={4}
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-700 leading-relaxed resize-none"
+                />
+                <p className="text-[11px] text-slate-400">
+                  This personalized note will be formatted into the candidate's email notification alongside the attached PDF scorecard.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-200">
+              <span className="text-[11px] text-slate-400">
+                Audited &amp; Logged by HireFlow
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSendModal(false)}
+                  disabled={sendingReport}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendEmail}
+                  disabled={sendingReport || !customEmail}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs transition-colors cursor-pointer"
+                >
+                  {sendingReport ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Sending Report...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{sendStatus?.report_sent ? "Re-send Report" : "Send Report to Candidate"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

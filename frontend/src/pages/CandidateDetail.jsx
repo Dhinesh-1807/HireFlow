@@ -5,6 +5,7 @@ import {
   MessageSquareText,
   FileText,
   ShieldCheck,
+  Mail,
 } from "lucide-react";
 import EvidenceBadge from "../components/common/EvidenceBadge";
 import SkillBadge from "../components/common/SkillBadge";
@@ -44,10 +45,19 @@ export default function CandidateDetail() {
           <span>Back to Candidate Database</span>
         </button>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={() => navigate(`/evaluations?candidate=${candidate.id}`)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-all duration-150 cursor-pointer shadow-2xs"
+            title="Review and send structured evaluation report to candidate"
+          >
+            <Mail className="w-4 h-4 text-sky-600" />
+            <span>Send Evaluation Report</span>
+          </button>
+
           <button
             onClick={() => navigate(`/interviews?candidate=${candidate.id}`)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150 cursor-pointer"
           >
             <MessageSquareText className="w-4 h-4" />
             <span>Generate Interview Questions</span>

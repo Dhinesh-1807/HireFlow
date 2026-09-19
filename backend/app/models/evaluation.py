@@ -112,6 +112,12 @@ class InterviewEvaluation(Base):
     areas_for_improvement = Column(Text, nullable=True) # JSON array of flags/gaps
     executive_summary = Column(Text, nullable=True)     # Synthesized executive report
 
+    # Report Email Delivery Tracking (Section 14)
+    report_sent = Column(Integer, default=0)
+    report_sent_at = Column(DateTime, nullable=True)
+    report_recipient = Column(String(255), nullable=True)
+    report_send_status = Column(String(50), default="NOT_SENT")  # NOT_SENT, SENDING, SENT, FAILED
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     session = relationship("InterviewSession", back_populates="evaluations")
