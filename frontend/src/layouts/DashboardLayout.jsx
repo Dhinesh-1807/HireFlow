@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
@@ -37,12 +37,12 @@ export default function DashboardLayout() {
   const meta = getPageMeta();
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar */}
+    <div className="h-screen w-full flex overflow-hidden bg-slate-50">
+      {/* Fixed Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area - only this container scrolls vertically */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto lg:ml-64 min-w-0">
         <Header
           title={meta.title}
           subtitle={meta.subtitle}

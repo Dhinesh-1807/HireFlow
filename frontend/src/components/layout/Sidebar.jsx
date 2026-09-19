@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -45,12 +45,12 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 h-screen w-64 bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+          isOpen ? "translate-x-0 z-50" : "-translate-x-full z-40"
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+        <div className="h-16 shrink-0 flex items-center justify-between px-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-sky-400 flex items-center justify-center text-white shadow-sm shadow-sky-500/20">
               <Sparkles className="w-5 h-5" />
@@ -116,7 +116,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* User Profile & Logout */}
-        <div className="p-3 border-t border-slate-100">
+        <div className="p-3 border-t border-slate-100 shrink-0 bg-white">
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700">

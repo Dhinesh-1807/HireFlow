@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
 import api from "../services/api";
@@ -23,7 +23,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="h-screen w-full overflow-y-auto bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
       {/* Subtle Sky-Blue Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-sky-200/40 rounded-full blur-3xl pointer-events-none" />
 
