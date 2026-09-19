@@ -19,7 +19,7 @@ export default function MobileBottomNav({ onOpenMenu }) {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 lg:hidden shadow-lg shadow-slate-900/5 safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 md:hidden print:hidden shadow-lg shadow-slate-900/5 safe-area-bottom"
     >
       <div className="grid grid-cols-5 h-16 max-w-md mx-auto px-2">
         {navTabs.map((tab) => {

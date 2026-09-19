@@ -38,7 +38,7 @@ export default function Header({ onMenuClick, title = "Dashboard Overview", subt
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3 print:hidden">
       {/* Mobile search bar mode (active on mobile when toggled) */}
       {mobileSearchOpen ? (
         <div className="flex items-center gap-2 w-full animate-in fade-in duration-150">

@@ -41,12 +41,12 @@ export default function Sidebar({ isOpen, onClose }) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden transition-opacity duration-200"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden print:hidden transition-opacity duration-200"
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen w-72 sm:w-64 max-w-[85vw] bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-250 ease-in-out lg:translate-x-0 shadow-2xl lg:shadow-none ${
+        className={`fixed top-0 left-0 h-screen w-72 sm:w-64 max-w-[85vw] bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-250 ease-in-out lg:translate-x-0 shadow-2xl lg:shadow-none print:hidden ${
           isOpen ? "translate-x-0 z-50" : "-translate-x-full z-40"
         }`}
       >

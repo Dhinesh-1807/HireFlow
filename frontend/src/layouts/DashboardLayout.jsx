@@ -38,23 +38,23 @@ export default function DashboardLayout() {
   const meta = getPageMeta();
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-slate-50">
+    <div className="h-screen w-full flex overflow-hidden bg-slate-50 print:h-auto print:overflow-visible print:bg-white">
       {/* Fixed Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content Area - only this container scrolls vertically */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto lg:ml-64 min-w-0">
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto lg:ml-64 min-w-0 print:ml-0 print:h-auto print:overflow-visible">
         <Header
           title={meta.title}
           subtitle={meta.subtitle}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-[1280px] w-full mx-auto pb-20 md:pb-8 print:p-0 print:max-w-none print:w-full">
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (< 1024px) */}
+      {/* Mobile Bottom Navigation Bar (Only on mobile <= 768px, hidden on desktop and print) */}
       <MobileBottomNav onOpenMenu={() => setSidebarOpen(true)} />
     </div>
   );
