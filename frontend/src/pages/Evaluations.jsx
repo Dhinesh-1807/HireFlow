@@ -251,18 +251,19 @@ export default function Evaluations() {
         report_send_status: "SENT",
       };
       setSendStatus(updatedStatus);
-      const isLive = res?.mode === "live_smtp";
+
+      const isLive = res?.mode === "live_smtp" || res?.mode === "live_api";
+      const providerName = res?.mode === "live_api" ? "Email API" : "Gmail SMTP";
       setSendSuccessBanner(
         isLive
-          ? `✓ Live email with PDF report successfully delivered to ${res.recipient || targetEmail} via Gmail!`
-          : `Evaluation report dispatch recorded for ${res.recipient || targetEmail}. (Demo Mode: To send a real email to candidate's Gmail inbox, add your Gmail App Password to backend/.env)`
+          ? `✓ Live email with PDF scorecard successfully delivered to ${res.recipient || targetEmail} via ${providerName}!`
+          : `⚠️ Demo Mode: Scorecard generated for ${res.recipient || targetEmail}. (Real delivery requires SMTP or Brevo API credentials in backend/.env or Render Environment)`
       );
-      setTimeout(() => setSendSuccessBanner(null), 10000);
+      setShowSendModal(false);
+      setTimeout(() => setSendSuccessBanner(null), 12000);
     } catch (err) {
       setSendError(
-        err.message && err.message !== "Not Found"
-          ? err.message
-          : "Delivery service temporarily unreachable. Please check backend connection or verify email."
+        err.message || "Email delivery failed. Please check backend connection and credentials."
       );
     } finally {
       setSendingReport(false);
@@ -305,6 +306,25 @@ export default function Evaluations() {
           <button
             onClick={() => setSendSuccessBanner(null)}
             className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold px-2 py-1 rounded hover:bg-emerald-100 transition-colors cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Error Notification Banner */}
+      {sendError && !showSendModal && (
+        <div className="flex items-center justify-between p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-sm shadow-xs animate-in fade-in slide-in-from-top-2 duration-200 print:hidden">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <span className="font-bold block">Delivery Failed</span>
+              <p className="text-xs text-rose-700 leading-relaxed">{sendError}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setSendError(null)}
+            className="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 rounded hover:bg-rose-100 transition-colors cursor-pointer"
           >
             Dismiss
           </button>
@@ -834,6 +854,16 @@ export default function Evaluations() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-5 max-h-[calc(85vh-140px)] overflow-y-auto">
+              {/* Delivery Error Alert */}
+              {sendError && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-xs text-rose-800">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <span className="font-bold text-rose-900 block">Email Delivery Failed:</span>
+                    <p className="leading-relaxed whitespace-pre-wrap">{sendError}</p>
+                  </div>
+                </div>
+              )}
               {/* Duplicate Send Warning */}
               {sendStatus?.report_sent && (
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-xs text-amber-900">
@@ -957,7 +987,7 @@ export default function Evaluations() {
                   </div>
                 </div>
                 <a
-                  href={`http://localhost:8000/api/v1/evaluations/${candidate.id || candidateId}/preview-pdf`}
+                  href={api.getPreviewPdfUrl(candidate?.rawId || candidate?.id || candidateId || "1")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-900 px-2.5 py-1.5 bg-white rounded-lg border border-sky-200 hover:bg-sky-50 transition-colors shadow-2xs"

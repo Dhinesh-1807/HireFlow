@@ -201,12 +201,21 @@ def send_evaluation_report(
     recipient_email = (payload.email or "").strip()
     if not recipient_email and candidate.email:
         recipient_email = candidate.email.strip()
+    elif not recipient_email and evaluation.report_recipient:
+        recipient_email = evaluation.report_recipient.strip()
 
     if not recipient_email or "@" not in recipient_email:
         raise HTTPException(
             status_code=400,
             detail="Candidate email address was not found in the uploaded resume. Please provide a valid email address.",
         )
+
+    # Persist candidate email if it was previously unset
+    if recipient_email and not candidate.email:
+        candidate.email = recipient_email
+        db.add(candidate)
+        db.commit()
+        db.refresh(candidate)
 
     # 2. Extract Evaluation Data
     strengths = []

@@ -529,6 +529,11 @@ Target Competencies & Skills: ${Array.isArray(jobData.requiredSkills) ? jobData.
     );
   },
 
+  // Helper to get PDF preview URL respecting active API_BASE_URL
+  getPreviewPdfUrl(evaluationId) {
+    return `${API_BASE_URL}/api/v1/evaluations/${evaluationId}/preview-pdf`;
+  },
+
   // 10. Candidate Evaluation Report Emailing (Module 14)
   async getEvaluationSendStatus(evaluationId) {
     try {
@@ -540,13 +545,6 @@ Target Competencies & Skills: ${Array.isArray(jobData.requiredSkills) ? jobData.
         return altRes.data;
       } catch {}
 
-      // Check localStorage for offline demo persistence
-      const stored = localStorage.getItem(`hireflow_eval_sent_${evaluationId}`);
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {}
-      }
       return {
         evaluation_id: evaluationId,
         report_sent: false,
@@ -567,59 +565,36 @@ Target Competencies & Skills: ${Array.isArray(jobData.requiredSkills) ? jobData.
       matrix_rows: data.matrixRows || data.matrix_rows,
     };
 
+    let serverError = null;
+
     // 1. Try primary evaluations endpoint
     try {
       const response = await apiClient.post(
         `/api/v1/evaluations/${evaluationId}/send-report`,
         payload
       );
-      localStorage.setItem(
-        `hireflow_eval_sent_${evaluationId}`,
-        JSON.stringify(response.data)
-      );
       return response.data;
     } catch (err1) {
-      // If server returned a 400 user-facing validation error (e.g. invalid email), propagate it
-      if (err1.response && err1.response.status === 400 && err1.response.data?.detail) {
-        throw new Error(err1.response.data.detail);
-      }
+      serverError = err1.response?.data?.detail || err1.message;
 
-      // 2. Try alternate interviews alias endpoint
-      try {
-        const altResponse = await apiClient.post(
-          `/api/v1/interviews/evaluations/${evaluationId}/send-report`,
-          payload
-        );
-        localStorage.setItem(
-          `hireflow_eval_sent_${evaluationId}`,
-          JSON.stringify(altResponse.data)
-        );
-        return altResponse.data;
-      } catch (err2) {
-        if (err2.response && err2.response.status === 400 && err2.response.data?.detail) {
-          throw new Error(err2.response.data.detail);
+      // 2. If 404 route not found, try alternate interviews alias endpoint
+      if (err1.response && err1.response.status === 404) {
+        try {
+          const altResponse = await apiClient.post(
+            `/api/v1/interviews/evaluations/${evaluationId}/send-report`,
+            payload
+          );
+          return altResponse.data;
+        } catch (err2) {
+          serverError = err2.response?.data?.detail || err2.message;
         }
       }
-
-      // 3. Graceful offline/simulation fallback: ensures recruiter is never blocked by network/route issues
-      const sentTime = new Date().toISOString();
-      const targetEmail = data.email || "devavarninemurugesh@gmail.com";
-      const fallbackResult = {
-        success: true,
-        mode: "simulated",
-        recipient: targetEmail,
-        sent_at: sentTime,
-        message: `Evaluation report sent successfully to ${targetEmail}. (Delivery Verified)`,
-        report_sent: true,
-        report_sent_at: sentTime,
-        report_recipient: targetEmail,
-      };
-      localStorage.setItem(
-        `hireflow_eval_sent_${evaluationId}`,
-        JSON.stringify(fallbackResult)
-      );
-      return fallbackResult;
     }
+
+    // Do NOT fake success if backend delivery failed. Propagate real error to user!
+    throw new Error(
+      serverError || "Delivery failed: Unable to connect to backend email service."
+    );
   },
 };
 

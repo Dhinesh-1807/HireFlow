@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@hireflow.ai"
     EMAIL_FROM_NAME: str = "HireFlow Recruitment Team"
     EMAIL_API_KEY: str = ""
+    BREVO_API_KEY: str = ""
 
     # CORS
     CORS_ORIGINS: Union[List[str], str] = [
@@ -49,7 +50,11 @@ class Settings(BaseSettings):
         return []
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), ".env"),
+            ".env",
+        ),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="allow",

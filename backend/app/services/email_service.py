@@ -15,7 +15,7 @@ logger = logging.getLogger("hireflow.email")
 class EmailService:
     @staticmethod
     def is_configured() -> bool:
-        """Check if SMTP credentials or Email API key are provided."""
+        """Check if SMTP credentials, Brevo API key, or Resend Email API key are provided."""
         has_smtp = bool(
             settings.SMTP_HOST
             and settings.SMTP_USERNAME
@@ -23,8 +23,9 @@ class EmailService:
             and settings.SMTP_USERNAME.strip()
             and settings.SMTP_PASSWORD.strip()
         )
-        has_api = bool(settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip())
-        return has_smtp or has_api
+        has_brevo = bool(getattr(settings, "BREVO_API_KEY", None) and settings.BREVO_API_KEY.strip())
+        has_email_api = bool(settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip())
+        return has_smtp or has_brevo or has_email_api
 
     @classmethod
     def send_candidate_evaluation_report(
@@ -39,7 +40,7 @@ class EmailService:
     ) -> Dict[str, Any]:
         """
         Send an evaluation report PDF to the candidate with an enterprise HTML template.
-        Supports both live SMTP delivery and safe audit simulation when credentials are unset.
+        Supports Brevo HTTP API (port 443), Resend API, and standard live SMTP.
         """
         if not recipient_email or "@" not in recipient_email:
             raise ValueError(f"Invalid recipient email address: '{recipient_email}'")
@@ -125,32 +126,86 @@ class EmailService:
             f"{settings.EMAIL_FROM_NAME}"
         )
 
-        # Create MIME Multipart Message
-        msg = MIMEMultipart("mixed")
-        msg["Subject"] = subject
-        msg["From"] = from_header
-        msg["To"] = recipient_email
-        msg["Date"] = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
-
-        msg_body = MIMEMultipart("alternative")
-        msg_body.attach(MIMEText(plain_text, "plain", "utf-8"))
-        msg_body.attach(MIMEText(html_body, "html", "utf-8"))
-        msg.attach(msg_body)
-
-        # Attach PDF
-        pdf_attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
-        pdf_attachment.add_header("Content-Disposition", "attachment", filename=filename)
-        msg.attach(pdf_attachment)
-
         sent_timestamp = datetime.datetime.utcnow().isoformat()
+        import json
+        import base64
+        import urllib.request
+        import urllib.error
 
-        # 1. Send via Resend / Email API if API key provided
-        if settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip():
+        # -------------------------------------------------------------------------
+        # Provider 1: Brevo (Sendinblue) HTTP API (HTTPS port 443 - works on Render Free Tier!)
+        # Free 300 emails/day to ANY recipient without domain verification required.
+        # -------------------------------------------------------------------------
+        brevo_key = getattr(settings, "BREVO_API_KEY", "") or ""
+        if not brevo_key and settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.startswith("xkeysib-"):
+            brevo_key = settings.EMAIL_API_KEY
+
+        if brevo_key and brevo_key.strip():
             try:
-                import json
-                import base64
-                import urllib.request
+                logger.info("Dispatching email via Brevo REST API (HTTPS port 443)...")
+                pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+                sender_email = settings.EMAIL_FROM or "dataforge187@gmail.com"
+                brevo_payload = {
+                    "sender": {"name": settings.EMAIL_FROM_NAME, "email": sender_email},
+                    "to": [{"email": recipient_email, "name": candidate_name}],
+                    "subject": subject,
+                    "htmlContent": html_body,
+                    "attachment": [
+                        {
+                            "name": filename,
+                            "content": pdf_b64,
+                        }
+                    ],
+                }
+                req = urllib.request.Request(
+                    "https://api.brevo.com/v3/smtp/email",
+                    data=json.dumps(brevo_payload).encode("utf-8"),
+                    headers={
+                        "accept": "application/json",
+                        "api-key": brevo_key.strip(),
+                        "content-type": "application/json",
+                        "user-agent": "HireFlow/1.0",
+                    },
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    logger.info(f"Brevo API email successfully delivered to {recipient_email}: {resp_data}")
+                    return {
+                        "success": True,
+                        "mode": "live_api",
+                        "recipient": recipient_email,
+                        "sent_at": sent_timestamp,
+                        "message": f"Evaluation report email sent to {recipient_email} via Brevo API.",
+                    }
+            except urllib.error.HTTPError as e:
+                err_text = e.read().decode("utf-8")
+                try:
+                    err_json = json.loads(err_text)
+                    err_msg = err_json.get("message", err_text)
+                except Exception:
+                    err_msg = err_text
+                logger.error(f"Brevo API error ({e.code}): {err_msg}")
+                return {
+                    "success": False,
+                    "mode": "live_api",
+                    "recipient": recipient_email,
+                    "error": f"Brevo API Error: {err_msg}",
+                }
+            except Exception as e:
+                logger.error(f"Failed to dispatch via Brevo API: {e}")
+                return {
+                    "success": False,
+                    "mode": "live_api",
+                    "recipient": recipient_email,
+                    "error": f"Brevo API Delivery Failed: {str(e)}",
+                }
 
+        # -------------------------------------------------------------------------
+        # Provider 2: Resend API (HTTPS port 443)
+        # -------------------------------------------------------------------------
+        if settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip() and settings.EMAIL_API_KEY.startswith("re_"):
+            try:
                 logger.info("Dispatching email via Resend Email API...")
                 pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
                 api_payload = {
@@ -171,7 +226,7 @@ class EmailService:
                     headers={
                         "Authorization": f"Bearer {settings.EMAIL_API_KEY.strip()}",
                         "Content-Type": "application/json",
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HireFlow/1.0",
+                        "User-Agent": "Mozilla/5.0 HireFlow/1.0",
                     },
                     method="POST",
                 )
@@ -180,7 +235,7 @@ class EmailService:
                     logger.info(f"Resend API email successfully delivered: {resp_data}")
                     return {
                         "success": True,
-                        "mode": "live_smtp",
+                        "mode": "live_api",
                         "recipient": recipient_email,
                         "sent_at": sent_timestamp,
                         "message": f"Evaluation report email sent to {recipient_email} via Resend.",
@@ -193,26 +248,55 @@ class EmailService:
                 except Exception:
                     err_msg = err_text
                 logger.error(f"Resend API error ({e.code}): {err_msg}")
-                return {
-                    "success": False,
-                    "mode": "live_smtp",
-                    "recipient": recipient_email,
-                    "error": err_msg,
-                }
+                # If Resend failed because of sandbox domain restriction, and SMTP is configured, fall through to SMTP
+                if not (settings.SMTP_HOST and settings.SMTP_USERNAME and settings.SMTP_PASSWORD):
+                    return {
+                        "success": False,
+                        "mode": "live_api",
+                        "recipient": recipient_email,
+                        "error": f"Resend API Error: {err_msg}",
+                    }
             except Exception as e:
                 logger.error(f"Failed to send email via Resend API: {str(e)}")
-                return {
-                    "success": False,
-                    "mode": "live_smtp",
-                    "recipient": recipient_email,
-                    "error": f"Email API Delivery Failed: {str(e)}",
-                }
+                if not (settings.SMTP_HOST and settings.SMTP_USERNAME and settings.SMTP_PASSWORD):
+                    return {
+                        "success": False,
+                        "mode": "live_api",
+                        "recipient": recipient_email,
+                        "error": f"Email API Delivery Failed: {str(e)}",
+                    }
 
-        # 2. Send via SMTP
-        if cls.is_configured():
+        # -------------------------------------------------------------------------
+        # Provider 3: Live SMTP (Gmail / Custom SMTP)
+        # -------------------------------------------------------------------------
+        has_smtp_credentials = bool(
+            settings.SMTP_HOST
+            and settings.SMTP_USERNAME
+            and settings.SMTP_PASSWORD
+            and settings.SMTP_USERNAME.strip()
+            and settings.SMTP_PASSWORD.strip()
+        )
+
+        if has_smtp_credentials:
+            # Construct standard MIME message
+            msg = MIMEMultipart("mixed")
+            msg["Subject"] = subject
+            msg["From"] = from_header
+            msg["To"] = recipient_email
+            msg["Date"] = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
+
+            msg_body = MIMEMultipart("alternative")
+            msg_body.attach(MIMEText(plain_text, "plain", "utf-8"))
+            msg_body.attach(MIMEText(html_body, "html", "utf-8"))
+            msg.attach(msg_body)
+
+            pdf_attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
+            pdf_attachment.add_header("Content-Disposition", "attachment", filename=filename)
+            msg.attach(pdf_attachment)
+
             try:
                 logger.info(f"Connecting to SMTP server {settings.SMTP_HOST}:{settings.SMTP_PORT}...")
-                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=12) as server:
                     if settings.SMTP_USE_TLS:
                         server.starttls()
                     server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
@@ -226,30 +310,53 @@ class EmailService:
                     "sent_at": sent_timestamp,
                     "message": f"Evaluation report email sent successfully to {recipient_email}.",
                 }
-            except Exception as e:
-                logger.error(f"Failed to send email via SMTP to {recipient_email}: {str(e)}")
+            except (smtplib.SMTPException, OSError, TimeoutError) as e:
+                err_str = str(e)
+                logger.error(f"SMTP failed to deliver to {recipient_email}: {err_str}")
+                
+                # Check for cloud firewall blocking (Render free tier timeout)
+                if "timed out" in err_str.lower() or "110" in err_str or "timeout" in err_str.lower():
+                    diagnostic = (
+                        f"SMTP Connection Timed Out to {settings.SMTP_HOST}:{settings.SMTP_PORT}. "
+                        f"IMPORTANT: Render Free Tier blocks outbound SMTP ports 587 and 465 to prevent spam. "
+                        f"To deliver emails from Render, add a free BREVO_API_KEY in Render's Environment tab, "
+                        f"or run the backend locally on your computer where port 587 is unblocked."
+                    )
+                else:
+                    diagnostic = f"SMTP Delivery Failed: {err_str}"
+
                 return {
                     "success": False,
                     "mode": "live_smtp",
                     "recipient": recipient_email,
-                    "error": f"SMTP Delivery Failed: {str(e)}",
+                    "error": diagnostic,
                 }
-        else:
-            # Simulated delivery for development / demo when SMTP credentials are not configured
-            logger.info(
-                f"[EMAIL SIMULATION] SMTP credentials not set in .env. "
-                f"Simulating successful email dispatch to {recipient_email} with PDF '{filename}' ({len(pdf_bytes)} bytes)."
-            )
-            return {
-                "success": True,
-                "mode": "simulated",
-                "recipient": recipient_email,
-                "sent_at": sent_timestamp,
-                "message": (
-                    f"Evaluation report dispatched successfully to {recipient_email}. "
-                    f"(Development Mode: Simulated delivery recorded)"
-                ),
-            }
+            except Exception as e:
+                logger.error(f"Unexpected error during SMTP send: {str(e)}")
+                return {
+                    "success": False,
+                    "mode": "live_smtp",
+                    "recipient": recipient_email,
+                    "error": f"SMTP Delivery Error: {str(e)}",
+                }
+
+        # -------------------------------------------------------------------------
+        # Fallback: Credentials not configured
+        # -------------------------------------------------------------------------
+        logger.warning(
+            f"[EMAIL NOT CONFIGURED] No SMTP or API credentials configured. "
+            f"Simulating report generation for {recipient_email}."
+        )
+        return {
+            "success": True,
+            "mode": "simulated",
+            "recipient": recipient_email,
+            "sent_at": sent_timestamp,
+            "message": (
+                f"Simulation Mode: Evaluation report generated for {recipient_email}. "
+                f"To send real emails, add your credentials to backend/.env or Render Environment."
+            ),
+        }
 
 
 email_service = EmailService()
