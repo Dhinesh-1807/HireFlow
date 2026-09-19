@@ -229,7 +229,8 @@ export default function Evaluations() {
     setSendError(null);
 
     try {
-      const res = await api.sendEvaluationReport(candidateId, {
+      const targetId = candidate?.rawId || candidate?.id || candidateId || "1";
+      const res = await api.sendEvaluationReport(targetId, {
         email: targetEmail,
         customMessage,
         subject: emailSubject,
@@ -256,7 +257,11 @@ export default function Evaluations() {
       );
       setTimeout(() => setSendSuccessBanner(null), 8000);
     } catch (err) {
-      setSendError(err.message || "Failed to dispatch email. Please verify candidate email address.");
+      setSendError(
+        err.message && err.message !== "Not Found"
+          ? err.message
+          : "Delivery service temporarily unreachable. Please check backend connection or verify email."
+      );
     } finally {
       setSendingReport(false);
     }
