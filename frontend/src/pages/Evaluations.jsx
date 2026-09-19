@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Download,
@@ -42,7 +42,7 @@ export default function Evaluations() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Structured Evaluation Report</h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -50,10 +50,10 @@ export default function Evaluations() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-sky-700 bg-white hover:bg-sky-50 border border-sky-200 rounded-lg shadow-xs transition-all duration-150"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-xs font-semibold text-sky-700 bg-white hover:bg-sky-50 border border-sky-200 rounded-lg shadow-xs transition-all duration-150"
           >
             <Download className="w-4 h-4 text-sky-600" />
             <span>Export / Print Report</span>
@@ -62,10 +62,10 @@ export default function Evaluations() {
       </div>
 
       {/* Human Recruiter Decision Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card space-y-5">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-card space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100">
+            <div className="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -77,11 +77,11 @@ export default function Evaluations() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <select
               value={recruiterDecision}
               onChange={(e) => setRecruiterDecision(e.target.value)}
-              className="text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full sm:w-auto text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/20"
             >
               <option value="Advance to Final Round">Advance to Final Round</option>
               <option value="Hold for Follow-up">Hold for Follow-up</option>

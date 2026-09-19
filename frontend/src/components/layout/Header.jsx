@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -6,7 +6,8 @@ import {
   Plus,
   UploadCloud,
   Bell,
-  Server,
+  X,
+  ArrowLeft,
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -14,6 +15,7 @@ export default function Header({ onMenuClick, title = "Dashboard Overview", subt
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isBackendLive, setIsBackendLive] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -31,84 +33,146 @@ export default function Header({ onMenuClick, title = "Dashboard Overview", subt
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileSearchOpen(false);
     }
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4">
-      {/* Left side: Hamburger + Titles */}
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          onClick={onMenuClick}
-          className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg lg:hidden transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        <div className="min-w-0">
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">{title}</h1>
-          {subtitle && (
-            <p className="text-xs text-slate-500 hidden sm:block truncate">{subtitle}</p>
-          )}
+    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3">
+      {/* Mobile search bar mode (active on mobile when toggled) */}
+      {mobileSearchOpen ? (
+        <div className="flex items-center gap-2 w-full animate-in fade-in duration-150">
+          <button
+            onClick={() => setMobileSearchOpen(false)}
+            className="p-2 text-slate-500 hover:text-slate-700 rounded-lg"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <form onSubmit={handleSearchSubmit} className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              autoFocus
+              placeholder="Search candidate, skill, requirement..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
+          <button
+            onClick={handleSearchSubmit}
+            className="px-3 py-2 text-xs font-semibold text-white bg-sky-500 rounded-lg shrink-0 shadow-xs"
+          >
+            Search
+          </button>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Left side: Hamburger + Titles */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={onMenuClick}
+              className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg lg:hidden transition-colors"
+              aria-label="Open sidebar navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-      {/* Middle: Natural language quick search */}
-      <form
-        onSubmit={handleSearchSubmit}
-        className="hidden md:flex items-center flex-1 max-w-md mx-4"
-      >
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search candidates by skill, experience, or requirement..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-150"
-          />
-        </div>
-      </form>
-
-      {/* Right side: Actions & Status */}
-      <div className="flex items-center gap-2.5">
-        {/* Backend Status Badge */}
-        {isBackendLive ? (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>FastAPI: Connected</span>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">{title}</h1>
+              {subtitle && (
+                <p className="text-xs text-slate-500 hidden sm:block truncate">{subtitle}</p>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">
-            <span className="w-2 h-2 rounded-full bg-sky-400" />
-            <span>Demo Mock Mode</span>
+
+          {/* Middle: Natural language quick search (Desktop/tablet) */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hidden md:flex items-center flex-1 max-w-md mx-4"
+          >
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search candidates by skill, experience, or requirement..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-150"
+              />
+            </div>
+          </form>
+
+          {/* Right side: Actions & Status */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Mobile Search Toggle Icon */}
+            <button
+              onClick={() => setMobileSearchOpen(true)}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg md:hidden transition-colors"
+              aria-label="Search candidates"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {/* Backend Status Badge (Desktop full, mobile compact pulse) */}
+            {isBackendLive ? (
+              <div
+                title="FastAPI: Connected"
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="hidden sm:inline">FastAPI: Connected</span>
+              </div>
+            ) : (
+              <div
+                title="Demo Mock Mode"
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200"
+              >
+                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                <span className="hidden sm:inline">Demo Mock Mode</span>
+              </div>
+            )}
+
+            {/* Upload Resumes Button (tablet/desktop) */}
+            <button
+              onClick={() => navigate("/resumes")}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-sky-700 bg-white border border-sky-200 rounded-lg hover:bg-sky-50 hover:border-sky-300 shadow-sm transition-all duration-150"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-sky-600" />
+              <span>Upload</span>
+            </button>
+
+            {/* New Job Primary Sky-Blue Button */}
+            <button
+              onClick={() => navigate("/jobs?action=new")}
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">New Job</span>
+              <span className="xs:hidden">Job</span>
+            </button>
+
+            {/* Notification indicator */}
+            <button
+              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-sky-500 ring-2 ring-white" />
+            </button>
           </div>
-        )}
-
-        {/* Upload Resumes Button */}
-        <button
-          onClick={() => navigate("/resumes")}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-sky-700 bg-white border border-sky-200 rounded-lg hover:bg-sky-50 hover:border-sky-300 shadow-sm transition-all duration-150"
-        >
-          <UploadCloud className="w-3.5 h-3.5 text-sky-600" />
-          <span>Upload Resumes</span>
-        </button>
-
-        {/* New Job Primary Sky-Blue Button */}
-        <button
-          onClick={() => navigate("/jobs?action=new")}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Job</span>
-        </button>
-
-        {/* Notification indicator */}
-        <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative transition-colors">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-sky-500 ring-2 ring-white" />
-        </button>
-      </div>
+        </>
+      )}
     </header>
   );
 }

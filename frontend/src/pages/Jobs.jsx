@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
-import { Plus, Briefcase, Users, Calendar, Sparkles, ArrowRight, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Users, ArrowRight, X } from "lucide-react";
 import SkillBadge from "../components/common/SkillBadge";
 import api from "../services/api";
 
@@ -39,7 +39,7 @@ export default function Jobs() {
   return (
     <div className="space-y-6">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Job Descriptions & Requirements</h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -48,7 +48,7 @@ export default function Jobs() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
         >
           <Plus className="w-4 h-4" />
           <span>Create New Job</span>
@@ -56,11 +56,11 @@ export default function Jobs() {
       </div>
 
       {/* Jobs grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {jobs.map((job) => (
           <div
             key={job.id}
-            className="bg-white rounded-xl border border-slate-200 p-5 shadow-card hover:shadow-card-hover hover:border-sky-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
+            className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-card hover:shadow-card-hover hover:border-sky-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-start justify-between gap-2">
@@ -108,7 +108,7 @@ export default function Jobs() {
               </div>
               <button
                 onClick={() => alert(`Reviewing candidates for ${job.title}`)}
-                className="text-xs font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 transition-colors py-1"
               >
                 <span>Screen Resumes</span>
                 <ArrowRight className="w-3 h-3" />
@@ -120,24 +120,24 @@ export default function Jobs() {
 
       {/* Modal for Creating Job */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
-            <div className="flex items-start justify-between">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-xl border border-slate-200 max-h-[92vh] flex flex-col my-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Define New Job Requirements</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">Define New Job Requirements</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
                   Specify skills and criteria for automated requirement-evidence mapping.
                 </p>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md -mr-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateJob} className="mt-5 space-y-4 text-xs">
+            <form onSubmit={handleCreateJob} className="mt-4 space-y-3.5 text-xs overflow-y-auto pr-0.5 flex-1">
               <div>
                 <label className="font-semibold text-slate-700">Job Title</label>
                 <input
@@ -150,7 +150,7 @@ export default function Jobs() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-semibold text-slate-700">Department</label>
                   <input
@@ -192,17 +192,17 @@ export default function Jobs() {
                 />
               </div>
 
-              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-slate-100 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all text-center"
                 >
                   Save Job & Requirements
                 </button>

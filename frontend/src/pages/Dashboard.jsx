@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Briefcase,
@@ -21,7 +21,7 @@ import api from "../services/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     stats: {},
     recentCandidates: [],
@@ -60,21 +60,21 @@ export default function Dashboard() {
           </div>
 
           {/* Main Heading */}
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 leading-snug sm:leading-tight">
             Screen with Evidence, Not Keyword Guesses.
           </h2>
 
           {/* Description */}
-          <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+          <p className="mt-2.5 text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl">
             HireFlow maps candidate resumes directly against your job requirements, extracting concrete proof, flagging missing competencies, and preparing interview questions for human recruiter validation.
           </p>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
             {/* Primary Sky-Blue Filled Button */}
             <button
               onClick={() => navigate("/resumes")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-sky-500 hover:bg-sky-600 text-white shadow-sm shadow-sky-500/25 transition-all duration-150"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-sky-500 hover:bg-sky-600 text-white shadow-sm shadow-sky-500/25 transition-all duration-150"
             >
               <UploadCloud className="w-4 h-4" />
               <span>Upload Resumes</span>
@@ -83,7 +83,7 @@ export default function Dashboard() {
             {/* Secondary White Button with Sky-Blue Border */}
             <button
               onClick={() => navigate("/jobs?action=new")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white hover:bg-sky-50/80 text-sky-700 border border-sky-200 shadow-xs transition-all duration-150"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white hover:bg-sky-50/80 text-sky-700 border border-sky-200 shadow-xs transition-all duration-150"
             >
               <Plus className="w-4 h-4 text-sky-600" />
               <span>Create Job Description</span>
@@ -92,7 +92,7 @@ export default function Dashboard() {
             {/* Text link */}
             <button
               onClick={() => navigate("/candidates")}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-sky-700 hover:text-sky-800 transition-colors ml-1"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-sky-700 hover:text-sky-800 transition-colors"
             >
               <span>Explore All Candidates</span>
               <ArrowRight className="w-4 h-4 text-sky-600" />
@@ -219,7 +219,56 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto flex-1">
+          {/* Mobile Card View (md:hidden) */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {recentCandidates.map((candidate) => (
+              <div
+                key={candidate.id}
+                onClick={() => navigate(`/candidates/${candidate.id}`)}
+                className="p-4 hover:bg-sky-50/40 active:bg-sky-50 transition-colors cursor-pointer space-y-2.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900 text-sm">{candidate.name}</div>
+                    <div className="text-[11px] text-slate-500">{candidate.email}</div>
+                  </div>
+                  <span className="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 shrink-0">
+                    {candidate.role}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <EvidenceBadge type="evidence" count={candidate.evidenceFoundCount} />
+                  {candidate.requiresValidationCount > 0 && (
+                    <EvidenceBadge type="validation" count={candidate.requiresValidationCount} />
+                  )}
+                  {candidate.missingInfoCount > 0 && (
+                    <EvidenceBadge type="missing" count={candidate.missingInfoCount} />
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {candidate.skills.slice(0, 3).map((s) => (
+                      <SkillBadge key={s} skill={s} />
+                    ))}
+                    {candidate.skills.length > 3 && (
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        +{candidate.skills.length - 3}
+                      </span>
+                    )}
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600">
+                    <span>View</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto flex-1">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
                 <tr>

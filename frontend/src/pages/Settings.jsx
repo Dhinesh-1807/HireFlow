@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Server, Shield, Database, Save, Check } from "lucide-react";
 
 export default function Settings() {
@@ -22,7 +22,7 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-card space-y-6">
         <form onSubmit={handleSave} className="space-y-5 text-xs">
           <div>
             <label className="font-semibold text-slate-700 flex items-center gap-1.5">
@@ -55,11 +55,11 @@ export default function Settings() {
             </select>
           </div>
 
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-sky-600" />
+                  <Shield className="w-4 h-4 text-sky-600 shrink-0" />
                   <span>Strict Human-Review Guardrails</span>
                 </span>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -70,14 +70,14 @@ export default function Settings() {
                 type="checkbox"
                 checked={strictMode}
                 onChange={(e) => setStrictMode(e.target.checked)}
-                className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
+                className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 shrink-0"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
             {saved ? (
-              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1">
                 <Check className="w-4 h-4 text-emerald-600" /> Settings saved successfully!
               </span>
             ) : (
@@ -85,7 +85,7 @@ export default function Settings() {
             )}
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-2 text-xs font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg shadow-sm shadow-sky-500/20 transition-all duration-150"
             >
               <Save className="w-4 h-4" />
               <span>Save Configuration</span>

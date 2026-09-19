@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   LogOut,
   UserCheck,
+  X,
 } from "lucide-react";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -40,17 +41,17 @@ export default function Sidebar({ isOpen, onClose }) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden transition-opacity duration-200"
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-screen w-72 sm:w-64 max-w-[85vw] bg-white text-slate-800 flex flex-col border-r border-slate-200 transition-transform duration-250 ease-in-out lg:translate-x-0 shadow-2xl lg:shadow-none ${
           isOpen ? "translate-x-0 z-50" : "-translate-x-full z-40"
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 shrink-0 flex items-center justify-between px-6 border-b border-slate-100">
+        <div className="h-16 shrink-0 flex items-center justify-between px-5 sm:px-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-sky-400 flex items-center justify-center text-white shadow-sm shadow-sky-500/20">
               <Sparkles className="w-5 h-5" />
@@ -65,6 +66,15 @@ export default function Sidebar({ isOpen, onClose }) {
               <p className="text-[11px] text-slate-500 font-medium">Recruitment Intelligence</p>
             </div>
           </div>
+
+          {/* Close button for mobile */}
+          <button
+            onClick={onClose}
+            className="p-2 -mr-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg lg:hidden transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation Links */}

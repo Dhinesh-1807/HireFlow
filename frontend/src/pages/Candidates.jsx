@@ -1,10 +1,8 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Users,
   Search,
   Filter,
-  ArrowRight,
   Eye,
 } from "lucide-react";
 import EvidenceBadge from "../components/common/EvidenceBadge";
@@ -45,7 +43,7 @@ export default function Candidates() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-card flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-card flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -53,17 +51,19 @@ export default function Candidates() {
             placeholder="Search candidates by name, skill, or role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+            className="w-full pl-9 pr-3 py-2.5 sm:py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-semibold text-slate-600">Filter Role:</span>
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-semibold">Role:</span>
+          </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-700 outline-none focus:border-sky-500 transition-colors"
+            className="flex-1 sm:flex-initial text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-700 outline-none focus:border-sky-500 transition-colors"
           >
             {roles.map((r) => (
               <option key={r} value={r}>
@@ -79,21 +79,21 @@ export default function Candidates() {
         {filtered.map((candidate) => (
           <div
             key={candidate.id}
-            className="bg-white rounded-xl border border-slate-200 p-5 shadow-card hover:shadow-card-hover hover:border-sky-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+            className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-card hover:shadow-card-hover hover:border-sky-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5"
           >
             {/* Left: Bio & Skills */}
-            <div className="space-y-2 flex-1">
-              <div className="flex items-center gap-3">
-                <h3 className="text-base font-bold text-slate-900">{candidate.name}</h3>
-                <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-md border border-sky-200">
+            <div className="space-y-2 flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h3 className="text-base font-bold text-slate-900 truncate max-w-full">{candidate.name}</h3>
+                <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-md border border-sky-200 shrink-0">
                   {candidate.role}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-400 shrink-0">
                   {candidate.experienceYears} yrs experience
                 </span>
               </div>
 
-              <p className="text-xs text-slate-600 italic">
+              <p className="text-xs text-slate-600 italic line-clamp-2 sm:line-clamp-none">
                 "{candidate.topEvidence}"
               </p>
 
@@ -124,7 +124,7 @@ export default function Candidates() {
             <div className="shrink-0 flex items-center gap-2 border-t lg:border-t-0 pt-3 lg:pt-0">
               <button
                 onClick={() => navigate(`/candidates/${candidate.id}`)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-sky-700 hover:text-white hover:bg-sky-500 bg-sky-50 border border-sky-200 rounded-lg transition-all duration-150"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-semibold text-sky-700 hover:text-white hover:bg-sky-500 bg-sky-50 border border-sky-200 rounded-lg transition-all duration-150"
               >
                 <Eye className="w-3.5 h-3.5" />
                 <span>View Evidence & Detail</span>
