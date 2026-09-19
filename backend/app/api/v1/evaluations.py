@@ -180,6 +180,7 @@ def get_evaluation_send_status(evaluation_id: str, db: Session = Depends(get_db)
         report_send_status=evaluation.report_send_status or "NOT_SENT",
         candidate_name=candidate.full_name,
         candidate_email=candidate.email,
+        smtp_configured=email_service.is_configured(),
     )
 
 

@@ -105,3 +105,5 @@ class EvaluationSendStatusResponse(BaseModel):
     report_send_status: str = "NOT_SENT"
     candidate_name: Optional[str] = None
     candidate_email: Optional[str] = None
+    smtp_configured: bool = False
+

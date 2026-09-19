@@ -251,11 +251,13 @@ export default function Evaluations() {
         report_send_status: "SENT",
       };
       setSendStatus(updatedStatus);
-      setShowSendModal(false);
+      const isLive = res?.mode === "live_smtp";
       setSendSuccessBanner(
-        `Evaluation report successfully sent to ${res.recipient || targetEmail}!`
+        isLive
+          ? `✓ Live email with PDF report successfully delivered to ${res.recipient || targetEmail} via Gmail!`
+          : `Evaluation report dispatch recorded for ${res.recipient || targetEmail}. (Demo Mode: To send a real email to candidate's Gmail inbox, add your Gmail App Password to backend/.env)`
       );
-      setTimeout(() => setSendSuccessBanner(null), 8000);
+      setTimeout(() => setSendSuccessBanner(null), 10000);
     } catch (err) {
       setSendError(
         err.message && err.message !== "Not Found"
@@ -844,11 +846,26 @@ export default function Evaluations() {
                 </div>
               )}
 
-              {/* Error Alert */}
-              {sendError && (
-                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-xs text-rose-800">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <span className="font-semibold">{sendError}</span>
+              {/* Delivery Mode Banner */}
+              {sendStatus?.smtp_configured ? (
+                <div className="px-3.5 py-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-semibold">Live Gmail SMTP Connected</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-600 font-medium">Real delivery enabled</span>
+                </div>
+              ) : (
+                <div className="p-3 bg-sky-50/80 border border-sky-200 rounded-xl text-xs text-sky-900 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <div className="font-bold text-sky-950">
+                      Simulation Mode Active (SMTP credentials not yet set)
+                    </div>
+                    <p className="text-[11px] text-sky-800 leading-relaxed">
+                      Sending in this mode simulates delivery and generates the PDF. To deliver a <strong>real email to candidate's Gmail inbox</strong>, enter your Gmail address and 16-character App Password in <code>backend/.env</code>.
+                    </p>
+                  </div>
                 </div>
               )}
 
