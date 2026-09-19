@@ -15,14 +15,16 @@ logger = logging.getLogger("hireflow.email")
 class EmailService:
     @staticmethod
     def is_configured() -> bool:
-        """Check if SMTP credentials are provided."""
-        return bool(
+        """Check if SMTP credentials or Email API key are provided."""
+        has_smtp = bool(
             settings.SMTP_HOST
             and settings.SMTP_USERNAME
             and settings.SMTP_PASSWORD
             and settings.SMTP_USERNAME.strip()
             and settings.SMTP_PASSWORD.strip()
         )
+        has_api = bool(settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip())
+        return has_smtp or has_api
 
     @classmethod
     def send_candidate_evaluation_report(
@@ -142,7 +144,71 @@ class EmailService:
 
         sent_timestamp = datetime.datetime.utcnow().isoformat()
 
-        # Send via SMTP or Simulate
+        # 1. Send via Resend / Email API if API key provided
+        if settings.EMAIL_API_KEY and settings.EMAIL_API_KEY.strip():
+            try:
+                import json
+                import base64
+                import urllib.request
+
+                logger.info("Dispatching email via Resend Email API...")
+                pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+                api_payload = {
+                    "from": f"{settings.EMAIL_FROM_NAME} <onboarding@resend.dev>",
+                    "to": [recipient_email],
+                    "subject": subject,
+                    "html": html_body,
+                    "attachments": [
+                        {
+                            "filename": filename,
+                            "content": pdf_b64,
+                        }
+                    ],
+                }
+                req = urllib.request.Request(
+                    "https://api.resend.com/emails",
+                    data=json.dumps(api_payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {settings.EMAIL_API_KEY.strip()}",
+                        "Content-Type": "application/json",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HireFlow/1.0",
+                    },
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    logger.info(f"Resend API email successfully delivered: {resp_data}")
+                    return {
+                        "success": True,
+                        "mode": "live_smtp",
+                        "recipient": recipient_email,
+                        "sent_at": sent_timestamp,
+                        "message": f"Evaluation report email sent to {recipient_email} via Resend.",
+                    }
+            except urllib.error.HTTPError as e:
+                err_text = e.read().decode("utf-8")
+                try:
+                    err_json = json.loads(err_text)
+                    err_msg = err_json.get("message", err_text)
+                except Exception:
+                    err_msg = err_text
+                logger.error(f"Resend API error ({e.code}): {err_msg}")
+                return {
+                    "success": False,
+                    "mode": "live_smtp",
+                    "recipient": recipient_email,
+                    "error": err_msg,
+                }
+            except Exception as e:
+                logger.error(f"Failed to send email via Resend API: {str(e)}")
+                return {
+                    "success": False,
+                    "mode": "live_smtp",
+                    "recipient": recipient_email,
+                    "error": f"Email API Delivery Failed: {str(e)}",
+                }
+
+        # 2. Send via SMTP
         if cls.is_configured():
             try:
                 logger.info(f"Connecting to SMTP server {settings.SMTP_HOST}:{settings.SMTP_PORT}...")
