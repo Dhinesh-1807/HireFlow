@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import Base, engine
 import app.models  # Ensure all models are registered
@@ -22,6 +23,18 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables...")
     try:
         Base.metadata.create_all(bind=engine)
+        # Safe self-healing schema migration for existing PostgreSQL/SQLite tables
+        with engine.begin() as conn:
+            for col_name, col_type in [
+                ("report_sent", "INTEGER DEFAULT 0"),
+                ("report_sent_at", "TIMESTAMP"),
+                ("report_recipient", "VARCHAR(255)"),
+                ("report_send_status", "VARCHAR(50) DEFAULT 'NOT_SENT'"),
+            ]:
+                try:
+                    conn.execute(text(f"ALTER TABLE interview_evaluations ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                except Exception:
+                    pass
         logger.info("Database tables verified/created successfully.")
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
